@@ -1,8 +1,6 @@
 # Project Charter - Entendimiento del Negocio
 
-## Nombre del Proyecto
-
-[DeepRetention – Modelo Predictivo de Retención Estudiantil con Deep Learning]
+## Nombre del proyecto: DeepRetention – Modelo Predictivo de Retención Estudiantil con Deep Learning
 
 ## Objetivo del Proyecto
 
