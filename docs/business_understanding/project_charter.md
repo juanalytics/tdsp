@@ -4,7 +4,7 @@
 
 ## Objetivo del Proyecto
 
-## 📌 **Objetivo del Proyecto**
+## **Objetivo del Proyecto**
 
 El objetivo principal de este proyecto es desarrollar y desplegar un modelo predictivo basado en redes neuronales, utilizando el conjunto de datos abierto **Open University Learning Analytics Dataset (OULAD)**, para identificar oportunamente estudiantes con alto riesgo de abandono en cursos virtuales. A través del análisis profundo y automatizado de variables demográficas, comportamentales y académicas recopiladas semanalmente, el modelo permitirá detectar patrones tempranos que anticipen la deserción estudiantil.
 
