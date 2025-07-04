@@ -2,7 +2,6 @@
 
 ## Nombre del proyecto: DeepRetention – Modelo Predictivo de Retención Estudiantil con Deep Learning
 
-## Objetivo del Proyecto
 
 ## **Objetivo del Proyecto**
 
