@@ -1,0 +1,14 @@
+**/*__pycache__/*
+*.env
+env_vars*
+credentials*
+**/build/*
+
+# Data files
+
+
+
+*.csv
+*.zip
+*.db
+*.pkl
