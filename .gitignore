@@ -1,14 +1,47 @@
-**/*__pycache__/*
+# Ignore Python cache and environment files
+**/__pycache__/
+*.pyc
+*.pyo
 *.env
+.env*
+venv/
+.venv/
+
+# Ignore credentials and environment variables
 env_vars*
 credentials*
-**/build/*
 
-# Data files
+# Ignore build artifacts
+**/build/
 
-
-
+# Ignore data and model artifacts
+data/
 *.csv
 *.zip
 *.db
 *.pkl
+*.h5
+*.json
+*.xlsx
+*.sav
+*.npz
+*.npy
+*.parquet
+*.feather
+*.joblib
+*.pt
+*.onnx
+*.model
+*.weights
+
+# Allow source code and documentation
+!src/
+!scripts/
+!docs/
+!*.md
+!*.txt
+!pyproject.toml
+!poetry.lock
+
+# Allow this .gitignore
+!.gitignore
