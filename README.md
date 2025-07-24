@@ -46,6 +46,7 @@
 - ⏳ Análisis de importancia de variables
 
 #### 8. **Deployment**
+- 🔄 [Guía de Despliegue en la Nube](docs/deployment/deploymentdoc.md)
 - ⏳ Documentación final
 - ⏳ Notebook reproducible
 - ⏳ Pipeline completo
@@ -111,13 +112,14 @@ python scripts/data_acquisition/main.py
 - **Juan Manuel Pérez** – Líder del proyecto / Responsable técnico
 - **Xamir Ernesto Rojas** – Analista de datos / Preprocesamiento
 
-## �� Documentación
+##  Documentación
 
 - [Project Charter](docs/business_understanding/project_charter.md)
 - [Data Definition](docs/data/data_definition.md)
 - [Data Dictionary](docs/data/data_dictionary.md)
 - [Data Summary](docs/data/data_summary.md)
 - [Data Acquisition Report](docs/data/data_acquisition_report.md)
+- [Guía de Despliegue](docs/deployment/deploymentdoc.md)
 
 ## 🔗 Enlaces Útiles
 
