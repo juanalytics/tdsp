@@ -13,6 +13,8 @@ from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, f1_score
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
 import joblib
 import logging
 from typing import Dict, Tuple, Any, Optional, List
@@ -41,6 +43,8 @@ class NeuralNetworkModel:
         self.architecture = architecture if architecture is not None else [128, 64, 32]  # Arquitectura por defecto
         self.model = None
         self.scaler = StandardScaler()
+        self.imputer = SimpleImputer(strategy='median')
+        self.pipeline = None
         self.is_fitted = False
         self.history = None
         
@@ -110,13 +114,8 @@ class NeuralNetworkModel:
             X_train, y_train, test_size=val_size, random_state=42, stratify=y_train
         )
         
-        # Escalar características
-        X_train_scaled = self.scaler.fit_transform(X_train)
-        X_val_scaled = self.scaler.transform(X_val)
-        X_test_scaled = self.scaler.transform(X_test)
-        
         logger.info(f"✅ Datos preparados - Train: {X_train.shape}, Val: {X_val.shape}, Test: {X_test.shape}")
-        return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test
+        return X_train, X_val, X_test, y_train, y_val, y_test
     
     def train(self, X: pd.DataFrame, y: pd.Series, epochs: int = 100, batch_size: int = 32, patience: int = 10) -> Dict[str, Any]:
         """
@@ -134,12 +133,31 @@ class NeuralNetworkModel:
         """
         logger.info("🚀 Entrenando modelo de red neuronal...")
         
+        # Seleccionar solo columnas numéricas
+        numeric_cols = X.select_dtypes(include=np.number).columns
+        X_numeric = X[numeric_cols]
+        self.input_dim = len(numeric_cols)
+
         # Preparar datos
-        X_train, X_val, X_test, y_train, y_val, y_test = self.prepare_data(X, y)
+        X_train, X_val, X_test, y_train, y_val, y_test = self.prepare_data(X_numeric, y)
         
-        # Construir modelo
+        # Construir modelo de Keras
         self.model = self.build_model()
-        
+
+        # Crear pipeline de preprocesamiento
+        preprocessor = Pipeline([
+            ('imputer', self.imputer),
+            ('scaler', self.scaler)
+        ])
+
+        # Procesar datos
+        X_train_processed = preprocessor.fit_transform(X_train)
+        X_val_processed = preprocessor.transform(X_val)
+        X_test_processed = preprocessor.transform(X_test)
+
+        # Guardar el preprocesador ajustado
+        self.pipeline = preprocessor
+
         # Callbacks
         early_stopping = keras.callbacks.EarlyStopping(
             monitor='val_loss',
@@ -156,8 +174,8 @@ class NeuralNetworkModel:
         
         # Entrenar modelo
         self.history = self.model.fit(
-            X_train, y_train,
-            validation_data=(X_val, y_val),
+            X_train_processed, y_train,
+            validation_data=(X_val_processed, y_val),
             epochs=epochs,
             batch_size=batch_size,
             callbacks=[early_stopping, reduce_lr],
@@ -168,17 +186,17 @@ class NeuralNetworkModel:
         
         # Evaluar modelo
         if self.model is not None:
-            y_pred_proba = self.model.predict(X_test)
+            y_pred_proba = self.model.predict(X_test_processed)
             y_pred = (y_pred_proba > 0.5).astype(int)
         else:
             raise ValueError("Modelo no inicializado correctamente")
         
         # Calcular métricas
         metrics = {
-            'accuracy': self.model.evaluate(X_test, y_test, verbose=0)[1],
+            'accuracy': self.model.evaluate(X_test_processed, y_test, verbose=0)[1],
             'f1_score': f1_score(y_test, y_pred),
             'roc_auc': roc_auc_score(y_test, y_pred_proba),
-            'classification_report': classification_report(y_test, y_pred),
+            'classification_report': classification_report(y_test, y_pred, zero_division=0),
             'confusion_matrix': confusion_matrix(y_test, y_pred),
             'training_history': self.history.history
         }
@@ -252,8 +270,9 @@ class NeuralNetworkModel:
         if not self.is_fitted:
             raise ValueError("El modelo debe estar entrenado antes de hacer predicciones")
         
-        X_scaled = self.scaler.transform(X)
-        y_pred_proba = self.model.predict(X_scaled)
+        numeric_cols = X.select_dtypes(include=np.number).columns
+        X_processed = self.pipeline.transform(X[numeric_cols])
+        y_pred_proba = self.model.predict(X_processed)
         return (y_pred_proba > 0.5).astype(int)
     
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
@@ -269,8 +288,9 @@ class NeuralNetworkModel:
         if not self.is_fitted:
             raise ValueError("El modelo debe estar entrenado antes de hacer predicciones")
         
-        X_scaled = self.scaler.transform(X)
-        return self.model.predict(X_scaled)
+        numeric_cols = X.select_dtypes(include=np.number).columns
+        X_processed = self.pipeline.transform(X[numeric_cols])
+        return self.model.predict(X_processed)
     
     def save_model(self, filepath: str):
         """
@@ -285,17 +305,12 @@ class NeuralNetworkModel:
         # Crear directorio si no existe
         Path(filepath).parent.mkdir(parents=True, exist_ok=True)
         
-        # Guardar modelo y scaler
-        model_data = {
-            'model': self.model,
-            'scaler': self.scaler,
-            'architecture': self.architecture,
-            'input_dim': self.input_dim,
-            'history': self.history
-        }
+        # Guardar modelo Keras y pipeline preprocesador por separado
+        self.model.save(filepath.replace('.pkl', '.keras'))
+        joblib.dump(self.pipeline, filepath.replace('.pkl', '_preprocessor.pkl'))
         
-        joblib.dump(model_data, filepath)
-        logger.info(f"✅ Modelo guardado en {filepath}")
+        logger.info(f"✅ Modelo Keras guardado en {filepath.replace('.pkl', '.keras')}")
+        logger.info(f"✅ Preprocesador guardado en {filepath.replace('.pkl', '_preprocessor.pkl')}")
     
     def load_model(self, filepath: str):
         """
@@ -304,16 +319,13 @@ class NeuralNetworkModel:
         Args:
             filepath: Ruta del modelo a cargar
         """
-        model_data = joblib.load(filepath)
-        
-        self.model = model_data['model']
-        self.scaler = model_data['scaler']
-        self.architecture = model_data['architecture']
-        self.input_dim = model_data['input_dim']
-        self.history = model_data.get('history')
+        self.model = keras.models.load_model(filepath.replace('.pkl', '.keras'))
+        self.pipeline = joblib.load(filepath.replace('.pkl', '_preprocessor.pkl'))
+        self.scaler = self.pipeline.named_steps['scaler']
+        self.imputer = self.pipeline.named_steps['imputer']
         self.is_fitted = True
         
-        logger.info(f"✅ Modelo cargado desde {filepath}")
+        logger.info(f"✅ Modelo cargado desde {filepath.replace('.pkl', '.keras')}")
     
     def get_model_summary(self) -> Dict[str, Any]:
         """

@@ -12,6 +12,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, f1_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
 import joblib
 import logging
 from typing import Dict, Tuple, Any, Optional
@@ -36,6 +38,8 @@ class BaselineModel:
         self.model_type = model_type
         self.model = None
         self.scaler = StandardScaler()
+        self.imputer = SimpleImputer(strategy='median')
+        self.pipeline = None
         self.is_fitted = False
         
         if model_type == 'logistic':
@@ -64,12 +68,8 @@ class BaselineModel:
             X, y, test_size=test_size, random_state=42, stratify=y
         )
         
-        # Escalar características numéricas
-        X_train_scaled = self.scaler.fit_transform(X_train)
-        X_test_scaled = self.scaler.transform(X_test)
-        
         logger.info(f"✅ Datos preparados - Train: {X_train.shape}, Test: {X_test.shape}")
-        return X_train_scaled, X_test_scaled, y_train, y_test
+        return X_train, X_test, y_train, y_test
     
     def train(self, X: pd.DataFrame, y: pd.Series) -> Dict[str, Any]:
         """
@@ -84,23 +84,34 @@ class BaselineModel:
         """
         logger.info(f"🚀 Entrenando modelo baseline ({self.model_type})...")
         
-        # Preparar datos
-        X_train, X_test, y_train, y_test = self.prepare_data(X, y)
+        # Seleccionar solo columnas numéricas
+        numeric_cols = X.select_dtypes(include=np.number).columns
+        X_numeric = X[numeric_cols]
         
-        # Entrenar modelo
-        self.model.fit(X_train, y_train)
+        # Preparar datos
+        X_train, X_test, y_train, y_test = self.prepare_data(X_numeric, y)
+
+        # Crear pipeline
+        self.pipeline = Pipeline([
+            ('imputer', self.imputer),
+            ('scaler', self.scaler),
+            ('model', self.model)
+        ])
+        
+        # Entrenar pipeline
+        self.pipeline.fit(X_train, y_train)
         self.is_fitted = True
         
         # Evaluar modelo
-        y_pred = self.model.predict(X_test)
-        y_pred_proba = self.model.predict_proba(X_test)[:, 1]
+        y_pred = self.pipeline.predict(X_test)
+        y_pred_proba = self.pipeline.predict_proba(X_test)[:, 1]
         
         # Calcular métricas
         metrics = {
-            'accuracy': self.model.score(X_test, y_test),
+            'accuracy': self.pipeline.score(X_test, y_test),
             'f1_score': f1_score(y_test, y_pred),
             'roc_auc': roc_auc_score(y_test, y_pred_proba),
-            'classification_report': classification_report(y_test, y_pred),
+            'classification_report': classification_report(y_test, y_pred, zero_division=0),
             'confusion_matrix': confusion_matrix(y_test, y_pred)
         }
         
@@ -121,11 +132,19 @@ class BaselineModel:
         """
         logger.info(f"🔄 Realizando validación cruzada ({cv} folds)...")
         
+        # Crear pipeline para CV
+        cv_pipeline = Pipeline([
+            ('imputer', SimpleImputer(strategy='median')),
+            ('scaler', StandardScaler()),
+            ('model', self.model)
+        ])
+        
         # Escalar datos
-        X_scaled = self.scaler.fit_transform(X)
+        numeric_cols = X.select_dtypes(include=np.number).columns
+        X_numeric = X[numeric_cols]
         
         # Validación cruzada
-        cv_scores = cross_val_score(self.model, X_scaled, y, cv=cv, scoring='f1')
+        cv_scores = cross_val_score(cv_pipeline, X_numeric, y, cv=cv, scoring='f1')
         
         metrics = {
             'cv_f1_mean': cv_scores.mean(),
@@ -150,9 +169,9 @@ class BaselineModel:
             raise ValueError("El modelo debe estar entrenado antes de obtener importancia de características")
         
         if self.model_type == 'random_forest':
-            importance = self.model.feature_importances_
+            importance = self.pipeline.named_steps['model'].feature_importances_
         elif self.model_type == 'logistic':
-            importance = np.abs(self.model.coef_[0])
+            importance = np.abs(self.pipeline.named_steps['model'].coef_[0])
         else:
             return pd.DataFrame()
         
@@ -177,8 +196,8 @@ class BaselineModel:
         if not self.is_fitted:
             raise ValueError("El modelo debe estar entrenado antes de hacer predicciones")
         
-        X_scaled = self.scaler.transform(X)
-        return self.model.predict(X_scaled)
+        numeric_cols = X.select_dtypes(include=np.number).columns
+        return self.pipeline.predict(X[numeric_cols])
     
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         """
@@ -193,8 +212,8 @@ class BaselineModel:
         if not self.is_fitted:
             raise ValueError("El modelo debe estar entrenado antes de hacer predicciones")
         
-        X_scaled = self.scaler.transform(X)
-        return self.model.predict_proba(X_scaled)
+        numeric_cols = X.select_dtypes(include=np.number).columns
+        return self.pipeline.predict_proba(X[numeric_cols])
     
     def save_model(self, filepath: str):
         """
@@ -209,15 +228,9 @@ class BaselineModel:
         # Crear directorio si no existe
         Path(filepath).parent.mkdir(parents=True, exist_ok=True)
         
-        # Guardar modelo y scaler
-        model_data = {
-            'model': self.model,
-            'scaler': self.scaler,
-            'model_type': self.model_type
-        }
-        
-        joblib.dump(model_data, filepath)
-        logger.info(f"✅ Modelo guardado en {filepath}")
+        # Guardar pipeline completo
+        joblib.dump(self.pipeline, filepath)
+        logger.info(f"✅ Modelo (pipeline) guardado en {filepath}")
     
     def load_model(self, filepath: str):
         """
@@ -226,14 +239,13 @@ class BaselineModel:
         Args:
             filepath: Ruta del modelo a cargar
         """
-        model_data = joblib.load(filepath)
-        
-        self.model = model_data['model']
-        self.scaler = model_data['scaler']
-        self.model_type = model_data['model_type']
+        self.pipeline = joblib.load(filepath)
+        self.model = self.pipeline.named_steps['model']
+        self.scaler = self.pipeline.named_steps['scaler']
+        self.imputer = self.pipeline.named_steps['imputer']
         self.is_fitted = True
         
-        logger.info(f"✅ Modelo cargado desde {filepath}")
+        logger.info(f"✅ Modelo (pipeline) cargado desde {filepath}")
     
     def get_model_summary(self) -> Dict[str, Any]:
         """
@@ -245,7 +257,7 @@ class BaselineModel:
         summary = {
             'model_type': self.model_type,
             'is_fitted': self.is_fitted,
-            'model_params': self.model.get_params() if self.is_fitted else None
+            'model_params': self.pipeline.named_steps['model'].get_params() if self.is_fitted else None
         }
         
         return summary 

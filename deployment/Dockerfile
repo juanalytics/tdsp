@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # NOTA: La estructura de directorios debe coincidir
 COPY deployment/app.py .
 COPY models/ ./models/
+COPY data/processed/feature_info.json .
 
 # Exponer el puerto que usará la aplicación
 EXPOSE 8080

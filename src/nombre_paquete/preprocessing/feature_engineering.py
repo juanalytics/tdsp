@@ -125,13 +125,18 @@ class FeatureEngineer:
         if not interaction_features.empty:
             features_df = features_df.merge(
                 interaction_features, 
-                on='id_student', 
+                on=['code_module', 'code_presentation', 'id_student'], 
                 how='left'
             )
             
-            # Rellenar valores faltantes con 0
-            interaction_cols = [col for col in interaction_features.columns if col != 'id_student']
-            features_df[interaction_cols] = features_df[interaction_cols].fillna(0)
+            # Rellenar valores faltantes con 0 solo en las nuevas columnas de interacciones
+            interaction_cols = [
+                col for col in interaction_features.columns 
+                if col not in ['code_module', 'code_presentation', 'id_student']
+            ]
+            for col in interaction_cols:
+                if col in features_df.columns:
+                    features_df[col] = features_df[col].fillna(0)
         
         # Crear características derivadas de interacciones
         if 'total_clicks' in features_df.columns:
@@ -222,9 +227,13 @@ class FeatureEngineer:
         """
         logger.info("📊 Calculando ranking de importancia de características...")
         
-        # Calcular correlaciones con la variable objetivo (asumiendo que está en el DataFrame)
+        # Calcular correlaciones solo con columnas numéricas
         if 'target' in features_df.columns:
-            correlations = features_df.corr()['target'].abs().sort_values(ascending=False)
+            numeric_cols = features_df.select_dtypes(include=np.number).columns.tolist()
+            if 'target' not in numeric_cols:
+                numeric_cols.append('target')
+                
+            correlations = features_df[numeric_cols].corr()['target'].abs().sort_values(ascending=False)
             
             # Crear DataFrame con ranking
             ranking_df = pd.DataFrame({

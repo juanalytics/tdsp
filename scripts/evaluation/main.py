@@ -80,7 +80,8 @@ def load_trained_models():
     # Cargar modelo de red neuronal
     nn_path = models_dir / "neural_network_model.pkl"
     if nn_path.exists():
-        nn_model = NeuralNetworkModel(input_dim=0)  # Se actualizará al cargar
+        # Input dim es irrelevante al cargar, se sobreescribirá
+        nn_model = NeuralNetworkModel(input_dim=1)
         nn_model.load_model(str(nn_path))
         models['neural_network'] = nn_model
         logger.info("✅ Cargado neural_network")
@@ -114,16 +115,17 @@ def generate_comprehensive_evaluation(features_df, target, models):
         y_pred = model.predict(features_df)
         y_pred_proba = model.predict_proba(features_df)
         
-        # Ajustar formato de probabilidades para modelos baseline
-        if hasattr(model, 'model_type') and model.model_type in ['logistic', 'random_forest']:
-            if len(y_pred_proba.shape) > 1:
-                y_pred_proba = y_pred_proba[:, 1]
+        # Ajustar formato de probabilidades si es necesario
+        if len(y_pred_proba.shape) > 1 and y_pred_proba.shape[1] > 1:
+             y_pred_proba = y_pred_proba[:, 1]
+        else:
+             y_pred_proba = y_pred_proba.flatten()
         
         # Obtener importancia de características si está disponible
         feature_importance = None
         if hasattr(model, 'get_feature_importance'):
             try:
-                feature_importance = model.get_feature_importance(features_df.columns.tolist())
+                feature_importance = model.get_feature_importance(features_df)
             except:
                 pass
         

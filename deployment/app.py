@@ -4,30 +4,41 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
 import os
-# from tensorflow import keras # Desactivado temporalmente
+import numpy as np
+import json
 
 # Inicializar la aplicación FastAPI
 app = FastAPI(title="API de Predicción de Retención Estudiantil")
 
-# --- Carga de Modelo y Scaler ---
-# MODEL_PATH = 'models/neural_network_model.keras'
-SCALER_PATH = 'models/neural_network_model_scaler.pkl'
+# --- Carga de Artefactos ---
+MODEL_PATH = 'models/random_forest_model.pkl'
+FEATURES_PATH = 'feature_info.json'
 
-model = None
-scaler = None
+pipeline = None
 model_loaded = False
-try:
-    # model = keras.models.load_model(MODEL_PATH) # Desactivado
-    scaler_data = joblib.load(SCALER_PATH)
-    scaler = scaler_data['scaler']
-    model_loaded = True # Forzamos a true para probar
-except Exception as e:
-    model_loaded = False
-    print(f"Error loading assets: {e}")
+numerical_features = []
 
+try:
+    # Cargar el pipeline completo
+    pipeline = joblib.load(MODEL_PATH)
+    
+    # Cargar la lista de características numéricas
+    with open(FEATURES_PATH, 'r') as f:
+        feature_info = json.load(f)
+        numerical_features = feature_info.get('numerical_columns', [])
+    
+    if pipeline and numerical_features:
+        model_loaded = True
+    else:
+        print("Error: No se pudo cargar el pipeline o las características.")
+        model_loaded = False
+except Exception as e:
+    print(f"Error loading artifacts: {e}")
+    model_loaded = False
 
 # --- Definición del payload de entrada ---
 class StudentFeatures(BaseModel):
+    # La lista debe tener la misma longitud que numerical_features
     features: List[float]
 
 # --- Endpoints de la API ---
@@ -41,13 +52,28 @@ def predict(student: StudentFeatures):
     """
     Recibe las características de un estudiante y predice si abandonará.
     """
-    if not model_loaded or not scaler:
-        return {"error": "Modelo o scaler no cargado."}
+    if not model_loaded:
+        return {"error": "Modelo o características no cargados."}
 
-    # Devolvemos una predicción falsa
+    if len(student.features) != len(numerical_features):
+        return {
+            "error": f"Se esperaban {len(numerical_features)} características, pero se recibieron {len(student.features)}."
+        }
+
+    # Crear DataFrame solo con las características numéricas y sus nombres correctos
+    features_df = pd.DataFrame([student.features], columns=numerical_features)
+    
+    # Predecir
+    try:
+        prediction = pipeline.predict(features_df)[0]
+        prediction_proba = pipeline.predict_proba(features_df)[0][1] # Probabilidad de la clase 1
+    except Exception as e:
+        return {"error": f"Error durante la predicción: {e}"}
+
+
     return {
-        "prediction": 0,
-        "probability": 0.1
+        "prediction": int(prediction),
+        "probability": float(prediction_proba)
     }
 
 if __name__ == "__main__":

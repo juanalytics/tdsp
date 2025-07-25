@@ -1,103 +1,110 @@
 # Documentación de Despliegue del Modelo
 
-Este documento detalla la infraestructura, el código y el proceso utilizados para desplegar el modelo de predicción de retención estudiantil en Google Cloud Platform.
+Este documento detalla la infraestructura, el código y el proceso utilizados para desplegar el modelo de predicción de retención estudiantil en Google Cloud Platform, siguiendo la estructura requerida.
 
-## 1. Infraestructura
+---
 
--   **Nombre del Modelo:** `student-retention-api` (en Google Cloud Run)
--   **Plataforma de Despliegue:** Google Cloud Run
--   **Registro de Contenedores:** Google Container Registry (GCR)
--   **Requisitos Técnicos:**
+## Infraestructura
+
+-   **Nombre del modelo:** `student-retention-api` (Nombre del servicio en Google Cloud Run)
+-   **Plataforma de despliegue:** Google Cloud Run
+-   **Requisitos técnicos:**
     -   Python 3.9
     -   Docker
     -   Google Cloud SDK (`gcloud` CLI)
-    -   **Librerías Principales:** FastAPI, Uvicorn, Tensorflow/Keras, Scikit-learn, Pandas.
--   **Requisitos de Seguridad:**
+    -   **Librerías Principales:** FastAPI, Uvicorn, Scikit-learn, Pandas.
+-   **Requisitos de seguridad:**
     -   El servicio en Cloud Run está configurado para permitir acceso público no autenticado (`--allow-unauthenticated`) para fines de demostración.
     -   Todo el tráfico es servido a través de HTTPS, gestionado automáticamente por Google Cloud Run.
+-   **Diagrama de arquitectura:**
+    ```mermaid
+    graph TD
+        subgraph "Usuario"
+            U[Cliente HTTP]
+        end
+    
+        subgraph "Google Cloud Platform"
+            CR[Google Cloud Run]
+            GCR[Google Container Registry]
+        end
+    
+        subgraph "Contenedor Docker"
+            F[Aplicación FastAPI]
+            M[Pipeline del Modelo .pkl]
+            J[feature_info.json]
+        end
+    
+        U --"HTTPS Request<br/>(e.g., /predict)"--> CR
+        CR --"Extrae imagen para servir"--> GCR
+        CR --"Ejecuta Contenedor"--> F
+        F --"Carga"--> M
+        F --"Carga"--> J
+        F --"Devuelve Predicción (JSON)"--> U
+    ```
 
-### Diagrama de Arquitectura
+---
 
-```mermaid
-graph TD
-    subgraph "Usuario"
-        U[Cliente HTTP]
-    end
+## Código de despliegue
 
-    subgraph "Google Cloud Platform"
-        CR[Google Cloud Run]
-        GCR[Google Container Registry]
-    end
+-   **Archivo principal:** `deployment/app.py`
+-   **Rutas de acceso a los archivos:**
+    -   `deployment/app.py`: Aplicación principal de la API FastAPI.
+    -   `deployment/Dockerfile`: Definición del contenedor Docker.
+    -   `deployment/requirements.txt`: Dependencias de Python para la API.
+    -   `models/random_forest_model.pkl`: Pipeline del modelo entrenado (Imputador + Escalador + Modelo).
+    -   `data/processed/feature_info.json`: Metadatos con la lista de características numéricas que espera el modelo.
+    -   `scripts/test_api_call.py`: Script para ejecutar pruebas por lotes contra la API desplegada.
+-   **Variables de entorno:**
+    -   `PORT`: Proporcionada automáticamente por Cloud Run para indicar en qué puerto debe escuchar la aplicación. El código está preparado para usarla.
 
-    subgraph "Contenedor Docker"
-        F[Aplicación FastAPI]
-        M[Modelo .keras/.pkl]
-        S[Scaler .pkl]
-    end
+---
 
-    U --"HTTPS Request<br/>(e.g., /predict)"--> CR
-    CR --"Extrae imagen para servir"--> GCR
-    CR --"Ejecuta Contenedor"--> F
-    F --"Carga"--> M
-    F --"Carga"--> S
-    F --"Devuelve Predicción (JSON)"--> U
-```
+## Documentación del despliegue
 
-## 2. Código de Despliegue
+### Instrucciones de instalación y configuración
 
--   **Archivo Principal:** `deployment/app.py` (Aplicación FastAPI)
--   **Contenerización:** `deployment/Dockerfile`
--   **Dependencias de la API:** `deployment/requirements.txt`
--   **Pruebas Automáticas:** `tests/test_api.py`
--   **Variables de Entorno:**
-    -   `PORT`: Proporcionada automáticamente por Cloud Run para indicar en qué puerto debe escuchar la aplicación. El `Dockerfile` y `app.py` están configurados para usar esta variable.
+Este proceso combina la configuración del entorno local y de Google Cloud con la instalación (despliegue) del servicio.
 
-## 3. Proceso de Despliegue (Resumen)
+**Paso 1: Configurar el Entorno Local y de GCP**
 
-El despliegue se realiza mediante la construcción de una imagen de Docker y su subida a Google Cloud Run.
+1.  **Iniciar sesión en gcloud:** Autentica tu cuenta y selecciona el proyecto.
+    ```bash
+    gcloud init
+    ```
+2.  **Habilitar las APIs necesarias:** Activa las APIs de Cloud Run y Container Registry.
+    ```bash
+    gcloud services enable run.googleapis.com
+    gcloud services enable containerregistry.googleapis.com
+    ```
+3.  **Configurar Docker:** Autoriza a Docker para que pueda interactuar con el registro de contenedores de tu proyecto.
+    ```bash
+    gcloud auth configure-docker
+    ```
 
-### Paso 1: Configurar el Entorno de GCP
+**Paso 2: Instalación (Despliegue del Modelo)**
 
-```bash
-# Iniciar sesión y seleccionar proyecto
-gcloud init
+1.  **Construir la Imagen Docker:** Desde la raíz del proyecto, ejecuta el siguiente comando. La bandera `--platform` es crucial para evitar errores de arquitectura (ej. en Mac M1/M2). Reemplaza `[PROJECT_ID]` y `[VERSION]`.
+    ```bash
+    docker build --platform linux/amd64 -t gcr.io/[PROJECT_ID]/student-retention-api:[VERSION] -f deployment/Dockerfile .
+    ```
+2.  **Subir la Imagen a GCR:** Publica la imagen construida en el registro de contenedores de Google.
+    ```bash
+    docker push gcr.io/[PROJECT_ID]/student-retention-api:[VERSION]
+    ```
+3.  **Desplegar en Cloud Run:** Crea o actualiza el servicio en Cloud Run con la nueva imagen.
+    ```bash
+    gcloud run deploy student-retention-api \
+      --image gcr.io/[PROJECT_ID]/student-retention-api:[VERSION] \
+      --platform managed \
+      --region us-central1 \
+      --allow-unauthenticated
+    ```
 
-# Habilitar las APIs necesarias
-gcloud services enable run.googleapis.com
-gcloud services enable containerregistry.googleapis.com
-
-# Configurar Docker para autenticarse con GCR
-gcloud auth configure-docker
-```
-
-### Paso 2: Construir y Subir la Imagen
-
-(Reemplazar `[PROJECT_ID]` con el ID del proyecto y `[VERSION]` con la etiqueta deseada, ej. `v1`)
-
-```bash
-# Construir la imagen especificando la plataforma para evitar problemas de arquitectura
-docker build --platform linux/amd64 -t gcr.io/[PROJECT_ID]/student-retention-api:[VERSION] -f deployment/Dockerfile .
-
-# Subir la imagen a GCR
-docker push gcr.io/[PROJECT_ID]/student-retention-api:[VERSION]
-```
-
-### Paso 3: Desplegar en Cloud Run
-
-```bash
-gcloud run deploy student-retention-api \
-  --image gcr.io/[PROJECT_ID]/student-retention-api:[VERSION] \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
-
-## 4. Instrucciones de Uso
+### Instrucciones de uso
 
 La API desplegada expone dos endpoints principales. La URL base del servicio es: `https://student-retention-api-493869234108.us-central1.run.app`
 
-### GET /
-
+**GET /**
 -   **Descripción:** Verifica el estado de la API.
 -   **Comando de Ejemplo:**
     ```bash
@@ -108,29 +115,29 @@ La API desplegada expone dos endpoints principales. La URL base del servicio es:
     {"status":"ok","model_loaded":true}
     ```
 
-### POST /predict
-
+**POST /predict**
 -   **Descripción:** Realiza una predicción de abandono estudiantil.
--   **Payload (Cuerpo de la Petición):** Un objeto JSON con una clave `features`, que es una lista de 24 valores numéricos (flotantes o enteros).
+-   **Payload (Cuerpo de la Petición):** Un objeto JSON con una clave `features`, que es una lista de **24 valores numéricos (flotantes o enteros)**.
 -   **Comando de Ejemplo:**
     ```bash
     curl -X POST "https://student-retention-api-493869234108.us-central1.run.app/predict" \
     -H "Content-Type: application/json" \
-    -d '{"features": [0.5, 1.2, -0.8, 2.1, 0.0, -1.5, 0.3, 1.8, -0.9, 0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}'
+    -d '{"features": [240.0, -159.0, 268.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1.0, -23.0]}'
     ```
 -   **Respuesta Esperada:**
     ```json
-    {"prediction":0,"probability":0.1}
+    {"prediction":0,"probability":0.42}
     ```
-    *(Nota: Esta es la respuesta de la versión de prueba. Una versión con un modelo real devolverá predicciones reales).*
+    *(Nota: La probabilidad puede variar, pero la estructura será la misma).*
 
-### Documentación Interactiva
+**Documentación Interactiva (Swagger UI)**
+-   Se puede acceder a una interfaz interactiva para realizar pruebas en: `https://student-retention-api-493869234108.us-central1.run.app/docs`
 
--   Se puede acceder a una interfaz de Swagger UI (generada por FastAPI) para realizar pruebas interactivas en la URL: `https://student-retention-api-493869234108.us-central1.run.app/docs`
+### Instrucciones de mantenimiento
 
-## 5. Mantenimiento y Troubleshooting
-
--   **Actualizar el Servicio:** Para desplegar una nueva versión del modelo o de la API, simplemente repita los Pasos 2 y 3 con una nueva etiqueta de versión (ej. `v7`). Cloud Run gestionará la transición del tráfico sin tiempo de inactividad.
--   **Ver Logs:** Los logs del contenedor se pueden visualizar en la consola de Google Cloud (Cloud Logging) para diagnosticar problemas. El enlace a los logs se proporciona en el output del comando `gcloud run deploy` si este falla.
--   **Problema Común (Arquitectura):** Si la construcción de la imagen se realiza en un Mac con chip Apple Silicon (ARM), es crucial usar la bandera `--platform linux/amd64` para asegurar la compatibilidad con Cloud Run.
--   **Problema Común (Timeout):** El error "container failed to start and listen on port" usualmente significa que la aplicación no está usando la variable de entorno `PORT` que Cloud Run le asigna.
+-   **Actualizar el Servicio:** Para desplegar una nueva versión del modelo o de la API, simplemente repita el **Paso 2 de Instalación** con una nueva etiqueta de versión (ej. `v9`). Cloud Run gestionará la transición del tráfico sin tiempo de inactividad.
+-   **Ver Logs:** Los logs del contenedor se pueden visualizar en la consola de Google Cloud, en la sección "Cloud Logging", para diagnosticar cualquier problema.
+-   **Troubleshooting Común:**
+    -   **Arquitectura:** Si la construcción de la imagen se realiza en un Mac con chip Apple Silicon (ARM), es crucial usar la bandera `--platform linux/amd64` para asegurar la compatibilidad con Cloud Run.
+    -   **Timeout:** El error "container failed to start and listen on port" usualmente significa que la aplicación no está usando la variable de entorno `PORT` que Cloud Run le asigna.
+    -   **Input Incorrecto:** La API devolverá un error si el número de características en la lista `features` no es exactamente 24.

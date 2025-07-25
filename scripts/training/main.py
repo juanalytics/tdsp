@@ -83,8 +83,18 @@ def train_baseline_models(features_df, target):
         # Validación cruzada
         cv_metrics = model.cross_validate(features_df, target)
         
-        # Obtener importancia de características
-        feature_importance = model.get_feature_importance(features_df.columns.tolist())
+        # Guardar importancia de características
+        feature_importance = None # Inicializar
+        if model.model_type in ['logistic', 'random_forest']:
+            try:
+                feature_importance = model.get_feature_importance(features_df)
+                if not feature_importance.empty:
+                    importance_path = Path(__file__).parent.parent.parent / "docs" / "modeling" / "feature_importance"
+                    importance_path.mkdir(parents=True, exist_ok=True)
+                    feature_importance.to_csv(importance_path / f"{model_name}_feature_importance.csv", index=False)
+                    logger.info(f"✅ Importancia de características guardada para {model_name}")
+            except Exception as e:
+                logger.warning(f"❌ Error al guardar importancia de características para {model_name}: {e}")
         
         # Guardar modelo
         models_dir = Path(__file__).parent.parent.parent / "models"
@@ -97,7 +107,7 @@ def train_baseline_models(features_df, target):
             'model_type': model_type,
             'metrics': metrics,
             'cv_metrics': cv_metrics,
-            'feature_importance': feature_importance,
+            'feature_importance': feature_importance, # Guardar la importancia si se generó
             'model_path': str(model_path)
         }
         
@@ -123,7 +133,7 @@ def train_neural_network(features_df, target):
     nn_model = NeuralNetworkModel(input_dim=input_dim, architecture=[128, 64, 32])
     
     # Entrenar modelo
-    metrics = nn_model.train(features_df, target, epochs=100, batch_size=32, patience=10)
+    metrics = nn_model.train(features_df, target, epochs=10, batch_size=32, patience=10)
     
     # Guardar modelo
     models_dir = Path(__file__).parent.parent.parent / "models"

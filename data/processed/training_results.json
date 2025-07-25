@@ -3,162 +3,154 @@
     "logistic_regression": {
       "model_type": "logistic",
       "metrics": {
-        "accuracy": 1.0,
-        "f1_score": 0.0,
-        "roc_auc": NaN,
-        "classification_report": "              precision    recall  f1-score   support\n\n           0       1.00      1.00      1.00         2\n\n    accuracy                           1.00         2\n   macro avg       1.00      1.00      1.00         2\nweighted avg       1.00      1.00      1.00         2\n",
-        "confusion_matrix": "[[2]]"
+        "accuracy": 0.9995252513821533,
+        "f1_score": 0.9974416944312232,
+        "roc_auc": 0.9994947026036847,
+        "classification_report": "              precision    recall  f1-score   support\n\n           0       1.00      1.00      1.00    328614\n           1       1.00      1.00      1.00     33683\n\n    accuracy                           1.00    362297\n   macro avg       1.00      1.00      1.00    362297\nweighted avg       1.00      1.00      1.00    362297\n",
+        "confusion_matrix": "[[328595     19]\n [   153  33530]]"
       },
       "cv_metrics": {
-        "cv_f1_mean": NaN,
-        "cv_f1_std": NaN,
+        "cv_f1_mean": 0.9970633826888525,
+        "cv_f1_std": 0.0016194484166888875,
         "cv_f1_scores": [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          NaN
+          0.9987976665825528,
+          0.996011548650177,
+          0.9991978132984729,
+          0.9961426762975649,
+          0.9951672086154948
         ]
       },
-      "feature_importance": "                       feature  importance\n15         unregistration_week    0.464982\n14          has_unregistration    0.464982\n4          date_unregistration    0.464982\n9                 is_full_time    0.231395\n10                is_part_time    0.231395\n0                   id_student    0.140238\n6             imd_band_numeric    0.122901\n12          early_registration    0.116801\n17                        date    0.044547\n20  avg_clicks_per_interaction    0.044547\n21       unique_activity_types    0.044547\n22               high_activity    0.044547\n23                low_activity    0.044547\n18                total_clicks    0.041315\n19           interaction_count    0.041315\n11           registration_week    0.020937\n2              studied_credits    0.017106\n3            date_registration    0.011479\n8       multiple_prev_attempts    0.000000\n7            has_prev_attempts    0.000000\n5   module_presentation_length    0.000000\n1         num_of_prev_attempts    0.000000\n13           late_registration    0.000000\n16         module_length_weeks    0.000000",
+      "feature_importance": null,
       "model_path": "/Users/xero/Desktop/u/tdsp/models/logistic_regression_model.pkl"
     },
     "random_forest": {
       "model_type": "random_forest",
       "metrics": {
-        "accuracy": 1.0,
-        "f1_score": 0.0,
-        "roc_auc": NaN,
-        "classification_report": "              precision    recall  f1-score   support\n\n           0       1.00      1.00      1.00         2\n\n    accuracy                           1.00         2\n   macro avg       1.00      1.00      1.00         2\nweighted avg       1.00      1.00      1.00         2\n",
-        "confusion_matrix": "[[2]]"
+        "accuracy": 0.9997957476876707,
+        "f1_score": 0.9989003804089396,
+        "roc_auc": 0.9999539089276194,
+        "classification_report": "              precision    recall  f1-score   support\n\n           0       1.00      1.00      1.00    328614\n           1       1.00      1.00      1.00     33683\n\n    accuracy                           1.00    362297\n   macro avg       1.00      1.00      1.00    362297\nweighted avg       1.00      1.00      1.00    362297\n",
+        "confusion_matrix": "[[328612      2]\n [    72  33611]]"
       },
       "cv_metrics": {
-        "cv_f1_mean": NaN,
-        "cv_f1_std": NaN,
+        "cv_f1_mean": 0.9962974632968887,
+        "cv_f1_std": 0.0013026525101758775,
         "cv_f1_scores": [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          NaN
+          0.9987977379662476,
+          0.9959819036847432,
+          0.9953828395536745,
+          0.9961576266642838,
+          0.9951672086154948
         ]
       },
-      "feature_importance": "                       feature  importance\n4          date_unregistration    0.234694\n14          has_unregistration    0.178231\n9                 is_full_time    0.118367\n15         unregistration_week    0.103855\n2              studied_credits    0.097143\n6             imd_band_numeric    0.085714\n10                is_part_time    0.061905\n0                   id_student    0.059546\n11           registration_week    0.048571\n12          early_registration    0.004762\n3            date_registration    0.002041\n19           interaction_count    0.001905\n18                total_clicks    0.001905\n23                low_activity    0.000680\n20  avg_clicks_per_interaction    0.000680\n8       multiple_prev_attempts    0.000000\n7            has_prev_attempts    0.000000\n1         num_of_prev_attempts    0.000000\n13           late_registration    0.000000\n5   module_presentation_length    0.000000\n16         module_length_weeks    0.000000\n17                        date    0.000000\n21       unique_activity_types    0.000000\n22               high_activity    0.000000",
+      "feature_importance": null,
       "model_path": "/Users/xero/Desktop/u/tdsp/models/random_forest_model.pkl"
     }
   },
   "neural_network": {
     "model_type": "MLP",
     "metrics": {
-      "accuracy": 0.5,
-      "f1_score": 0.0,
-      "roc_auc": NaN,
-      "classification_report": "              precision    recall  f1-score   support\n\n           0       1.00      0.50      0.67         2\n           1       0.00      0.00      0.00         0\n\n    accuracy                           0.50         2\n   macro avg       0.50      0.25      0.33         2\nweighted avg       1.00      0.50      0.67         2\n",
-      "confusion_matrix": "[[1 1]\n [0 0]]",
+      "accuracy": 0.9995225071907043,
+      "f1_score": 0.9974267822879327,
+      "roc_auc": 0.9997723451462851,
+      "classification_report": "              precision    recall  f1-score   support\n\n           0       1.00      1.00      1.00    328614\n           1       1.00      1.00      1.00     33683\n\n    accuracy                           1.00    362297\n   macro avg       1.00      1.00      1.00    362297\nweighted avg       1.00      1.00      1.00    362297\n",
+      "confusion_matrix": "[[328595     19]\n [   154  33529]]",
       "training_history": {
         "accuracy": [
-          0.6666666865348816,
-          0.3333333432674408,
-          0.3333333432674408,
-          0.3333333432674408,
-          0.3333333432674408,
-          0.6666666865348816,
-          0.5,
-          0.6666666865348816,
-          0.5,
-          0.5,
-          0.5
+          0.9984620809555054,
+          0.9994315505027771,
+          0.9994350075721741,
+          0.9994410872459412,
+          0.9994376301765442,
+          0.9994350075721741,
+          0.9994401931762695,
+          0.9994401931762695,
+          0.9994376301765442,
+          0.9994359016418457
         ],
         "loss": [
-          0.7059073448181152,
-          0.8251897692680359,
-          1.099495768547058,
-          0.9424871802330017,
-          0.9888601303100586,
-          0.7192139029502869,
-          0.9495509266853333,
-          0.5893362164497375,
-          0.7830002903938293,
-          0.9170823097229004,
-          0.5706323981285095
+          0.007964393123984337,
+          0.004480324219912291,
+          0.004283389542251825,
+          0.00427674874663353,
+          0.004246503114700317,
+          0.004184918012470007,
+          0.004130324814468622,
+          0.00407952768728137,
+          0.004134339280426502,
+          0.004110183101147413
         ],
         "precision": [
-          0.3333333432674408,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.3333333432674408,
-          0.0,
-          0.3333333432674408,
-          0.0,
-          0.0,
-          0.25
+          0.9898791909217834,
+          0.9992170929908752,
+          0.9992078542709351,
+          0.9992544054985046,
+          0.9992357492446899,
+          0.999226450920105,
+          0.9992544054985046,
+          0.9992358088493347,
+          0.9992544054985046,
+          0.9992357492446899
         ],
         "recall": [
-          1.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          1.0,
-          0.0,
-          1.0,
-          0.0,
-          0.0,
-          1.0
+          0.9936169981956482,
+          0.9946653842926025,
+          0.9947117567062378,
+          0.9947302937507629,
+          0.9947117567062378,
+          0.9946931600570679,
+          0.994720995426178,
+          0.9947395920753479,
+          0.9946931600570679,
+          0.9946931600570679
         ],
         "val_accuracy": [
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5
+          0.9994134902954102,
+          0.9994168877601624,
+          0.9994168877601624,
+          0.9994168877601624,
+          0.9994168877601624,
+          0.9994168877601624,
+          0.9994168877601624,
+          0.9994168877601624,
+          0.9994168877601624,
+          0.9994168877601624
         ],
         "val_loss": [
-          0.7838795781135559,
-          0.7995480298995972,
-          0.8162940144538879,
-          0.8283584117889404,
-          0.8386561870574951,
-          0.8453525900840759,
-          0.8446962833404541,
-          0.8488088250160217,
-          0.850246787071228,
-          0.8542619943618774,
-          0.8617333173751831
+          0.0043035754933953285,
+          0.0040898071601986885,
+          0.0042432923801243305,
+          0.004047968424856663,
+          0.0038880130741745234,
+          0.0038306480273604393,
+          0.004197280388325453,
+          0.003942437935620546,
+          0.0037202094681560993,
+          0.0037734070792794228
         ],
         "val_precision": [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
+          0.9994776844978333,
+          0.999477744102478,
+          0.999477744102478,
+          0.999477744102478,
+          0.999477744102478,
+          0.999477744102478,
+          0.999477744102478,
+          0.999477744102478,
+          0.999477744102478,
+          0.999477744102478
         ],
         "val_recall": [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
+          0.9942108392715454,
+          0.9942479729652405,
+          0.9942479729652405,
+          0.9942479729652405,
+          0.9942479729652405,
+          0.9942479729652405,
+          0.9942479729652405,
+          0.9942479729652405,
+          0.9942479729652405,
+          0.9942479729652405
         ],
         "learning_rate": [
           0.0010000000474974513,
@@ -167,11 +159,10 @@
           0.0010000000474974513,
           0.0010000000474974513,
           0.0010000000474974513,
-          0.0005000000237487257,
-          0.0005000000237487257,
-          0.0005000000237487257,
-          0.0005000000237487257,
-          0.0005000000237487257
+          0.0010000000474974513,
+          0.0010000000474974513,
+          0.0010000000474974513,
+          0.0010000000474974513
         ]
       }
     },
@@ -187,156 +178,154 @@
     "logistic_regression": {
       "model_name": "logistic_regression",
       "metrics": {
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1_score": 1.0,
-        "roc_auc": 1.0,
-        "average_precision": 1.0
+        "accuracy": 0.9994573509895754,
+        "precision": 0.999343882900992,
+        "recall": 0.9948164069922097,
+        "f1_score": 0.9970750054304325,
+        "roc_auc": 0.9994104981291478,
+        "average_precision": 0.997678024125767
       },
       "classification_report": {
         "0": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 9.0
+          "precision": 0.9994689235085602,
+          "recall": 0.999933052070882,
+          "f1-score": 0.9997009339197828,
+          "support": 1643068.0
         },
         "1": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 1.0
+          "precision": 0.999343882900992,
+          "recall": 0.9948164069922097,
+          "f1-score": 0.9970750054304325,
+          "support": 168416.0
         },
-        "accuracy": 1.0,
+        "accuracy": 0.9994573509895754,
         "macro avg": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 10.0
+          "precision": 0.999406403204776,
+          "recall": 0.9973747295315458,
+          "f1-score": 0.9983879696751077,
+          "support": 1811484.0
         },
         "weighted avg": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 10.0
+          "precision": 0.9994572983222686,
+          "recall": 0.9994573509895754,
+          "f1-score": 0.9994567979669053,
+          "support": 1811484.0
         }
       },
       "confusion_matrix": [
         [
-          9,
-          0
+          1642958,
+          110
         ],
         [
-          0,
-          1
+          873,
+          167543
         ]
       ],
       "plots": {
         "confusion_matrix": "/Users/xero/Desktop/u/tdsp/docs/modeling/plots/logistic_regression_confusion_matrix.png",
         "roc_curve": "/Users/xero/Desktop/u/tdsp/docs/modeling/plots/logistic_regression_roc_curve.png",
-        "precision_recall_curve": "/Users/xero/Desktop/u/tdsp/docs/modeling/plots/logistic_regression_precision_recall_curve.png",
-        "feature_importance": "/Users/xero/Desktop/u/tdsp/docs/modeling/plots/logistic_regression_feature_importance.png"
+        "precision_recall_curve": "/Users/xero/Desktop/u/tdsp/docs/modeling/plots/logistic_regression_precision_recall_curve.png"
       }
     },
     "random_forest": {
       "model_name": "random_forest",
       "metrics": {
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1_score": 1.0,
-        "roc_auc": 1.0,
-        "average_precision": 1.0
+        "accuracy": 0.9999591495149833,
+        "precision": 0.9999881197058439,
+        "recall": 0.9995724871746152,
+        "f1_score": 0.999780260243139,
+        "roc_auc": 0.9999909285916699,
+        "average_precision": 0.9999826323976893
       },
       "classification_report": {
         "0": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 9.0
+          "precision": 0.9999561814041182,
+          "recall": 0.9999987827649252,
+          "f1-score": 0.9999774816307925,
+          "support": 1643068.0
         },
         "1": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 1.0
+          "precision": 0.9999881197058439,
+          "recall": 0.9995724871746152,
+          "f1-score": 0.999780260243139,
+          "support": 168416.0
         },
-        "accuracy": 1.0,
+        "accuracy": 0.9999591495149833,
         "macro avg": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 10.0
+          "precision": 0.999972150554981,
+          "recall": 0.9997856349697702,
+          "f1-score": 0.9998788709369657,
+          "support": 1811484.0
         },
         "weighted avg": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 10.0
+          "precision": 0.9999591507491544,
+          "recall": 0.9999591495149833,
+          "f1-score": 0.9999591457044342,
+          "support": 1811484.0
         }
       },
       "confusion_matrix": [
         [
-          9,
-          0
+          1643066,
+          2
         ],
         [
-          0,
-          1
+          72,
+          168344
         ]
       ],
       "plots": {
         "confusion_matrix": "/Users/xero/Desktop/u/tdsp/docs/modeling/plots/random_forest_confusion_matrix.png",
         "roc_curve": "/Users/xero/Desktop/u/tdsp/docs/modeling/plots/random_forest_roc_curve.png",
-        "precision_recall_curve": "/Users/xero/Desktop/u/tdsp/docs/modeling/plots/random_forest_precision_recall_curve.png",
-        "feature_importance": "/Users/xero/Desktop/u/tdsp/docs/modeling/plots/random_forest_feature_importance.png"
+        "precision_recall_curve": "/Users/xero/Desktop/u/tdsp/docs/modeling/plots/random_forest_precision_recall_curve.png"
       }
     },
     "neural_network": {
       "model_name": "neural_network",
       "metrics": {
-        "accuracy": 0.7,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1_score": 0.0,
-        "roc_auc": 0.6666666666666667,
-        "average_precision": 0.25
+        "accuracy": 0.9994556948888315,
+        "precision": 0.9993438711601551,
+        "recall": 0.9947985939578188,
+        "f1_score": 0.997066052501592,
+        "roc_auc": 0.9997477566554449,
+        "average_precision": 0.9989052327238788
       },
       "classification_report": {
         "0": {
-          "precision": 0.875,
-          "recall": 0.7777777777777778,
-          "f1-score": 0.8235294117647058,
-          "support": 9.0
+          "precision": 0.9994670994759811,
+          "recall": 0.999933052070882,
+          "f1-score": 0.9997000214791922,
+          "support": 1643068.0
         },
         "1": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1-score": 0.0,
-          "support": 1.0
+          "precision": 0.9993438711601551,
+          "recall": 0.9947985939578188,
+          "f1-score": 0.997066052501592,
+          "support": 168416.0
         },
-        "accuracy": 0.7,
+        "accuracy": 0.9994556948888315,
         "macro avg": {
-          "precision": 0.4375,
-          "recall": 0.3888888888888889,
-          "f1-score": 0.4117647058823529,
-          "support": 10.0
+          "precision": 0.999405485318068,
+          "recall": 0.9973658230143504,
+          "f1-score": 0.9983830369903921,
+          "support": 1811484.0
         },
         "weighted avg": {
-          "precision": 0.7875,
-          "recall": 0.7,
-          "f1-score": 0.7411764705882352,
-          "support": 10.0
+          "precision": 0.9994556427807865,
+          "recall": 0.9994556948888315,
+          "f1-score": 0.9994551379917689,
+          "support": 1811484.0
         }
       },
       "confusion_matrix": [
         [
-          7,
-          2
+          1642958,
+          110
         ],
         [
-          1,
-          0
+          876,
+          167540
         ]
       ],
       "plots": {
@@ -348,31 +337,31 @@
   },
   "model_comparison": [
     {
-      "Modelo": "logistic_regression",
-      "Accuracy": 1.0,
-      "Precision": 1.0,
-      "Recall": 1.0,
-      "F1-Score": 1.0,
-      "ROC-AUC": 1.0,
-      "Average Precision": 1.0
+      "Modelo": "random_forest",
+      "Accuracy": 0.9999591495149833,
+      "Precision": 0.9999881197058439,
+      "Recall": 0.9995724871746152,
+      "F1-Score": 0.999780260243139,
+      "ROC-AUC": 0.9999909285916699,
+      "Average Precision": 0.9999826323976893
     },
     {
-      "Modelo": "random_forest",
-      "Accuracy": 1.0,
-      "Precision": 1.0,
-      "Recall": 1.0,
-      "F1-Score": 1.0,
-      "ROC-AUC": 1.0,
-      "Average Precision": 1.0
+      "Modelo": "logistic_regression",
+      "Accuracy": 0.9994573509895754,
+      "Precision": 0.999343882900992,
+      "Recall": 0.9948164069922097,
+      "F1-Score": 0.9970750054304325,
+      "ROC-AUC": 0.9994104981291478,
+      "Average Precision": 0.997678024125767
     },
     {
       "Modelo": "neural_network",
-      "Accuracy": 0.7,
-      "Precision": 0.0,
-      "Recall": 0.0,
-      "F1-Score": 0.0,
-      "ROC-AUC": 0.6666666666666667,
-      "Average Precision": 0.25
+      "Accuracy": 0.9994556948888315,
+      "Precision": 0.9993438711601551,
+      "Recall": 0.9947985939578188,
+      "F1-Score": 0.997066052501592,
+      "ROC-AUC": 0.9997477566554449,
+      "Average Precision": 0.9989052327238788
     }
   ]
 }
