@@ -14,8 +14,20 @@ credentials*
 # Ignore build artifacts
 **/build/
 
-# Ignore data and model artifacts
-data/
+# Ignore data folders, but track the structure
+# DVC will handle the contents
+data/anonymisedData/*
+!data/anonymisedData/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+
+# Ignore MLOps tool artifacts
+dvc_storage/
+mlruns/
+
+# Ignore large data and model artifact files
 *.csv
 *.zip
 *.db
