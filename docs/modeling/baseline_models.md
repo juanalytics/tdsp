@@ -14,6 +14,7 @@ Los modelos baseline son modelos simples que se utilizan para establecer una lí
 Las características utilizadas en los modelos baseline incluyen:
 
 ### Características Demográficas
+
 - **Género**: Codificado como variables dummy (gender_M, gender_F)
 - **Grupo de edad**: Codificado como variables dummy (age_band_<35, age_band_35-55, age_band_55+)
 - **Nivel educativo previo**: Codificado como variables dummy
@@ -22,6 +23,7 @@ Las características utilizadas en los modelos baseline incluyen:
 - **Banda socioeconómica**: Convertida a escala numérica (1-10)
 
 ### Características Académicas
+
 - **Número de intentos previos**: Variable numérica
 - **Tiene intentos previos**: Variable binaria (0/1)
 - **Múltiples intentos previos**: Variable binaria (0/1)
@@ -36,6 +38,7 @@ Las características utilizadas en los modelos baseline incluyen:
 - **Longitud del módulo en semanas**: Variable numérica
 
 ### Características Comportamentales (si están disponibles)
+
 - **Total de clics**: Variable numérica
 - **Actividad alta**: Variable binaria (>mediana)
 - **Actividad baja**: Variable binaria (≤mediana)
@@ -45,6 +48,7 @@ Las características utilizadas en los modelos baseline incluyen:
 ## Variable objetivo
 
 La variable objetivo es `final_result` convertida a binaria:
+
 - **0**: No abandono (Pass, Fail, Distinction)
 - **1**: Abandono (Withdrawn)
 
