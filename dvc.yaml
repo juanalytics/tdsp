@@ -1,0 +1,49 @@
+stages:
+  data_acquisition:
+    cmd: conda run -n tdsp-env python scripts/data_acquisition/main.py
+    deps:
+      - data/anonymisedData
+      - scripts/data_acquisition/main.py
+      - src/nombre_paquete/database/data_loader.py
+      - src/nombre_paquete/utils/utils.py
+    outs:
+      - data/processed/student_consolidated.csv
+
+  preprocess:
+    cmd: conda run -n tdsp-env python scripts/preprocessing/main.py
+    deps:
+      - data/processed/student_consolidated.csv
+      - scripts/preprocessing/main.py
+      - src/nombre_paquete/preprocessing/feature_engineering.py
+    outs:
+      - data/processed/modeling_features.csv
+      - data/processed/modeling_target.csv
+      - data/processed/feature_info.json
+
+  train_evaluate:
+    cmd: conda run -n tdsp-env python scripts/training/main.py
+    deps:
+      - data/processed/modeling_features.csv
+      - data/processed/modeling_target.csv
+      - scripts/training/main.py
+      - src/nombre_paquete/models/baseline_model.py
+      - src/nombre_paquete/models/neural_network.py
+      - src/nombre_paquete/evaluation/model_evaluator.py
+    # MLflow runs are not declared as outputs because they are tracked internally by MLflow
+    # However, DVC will know this stage needs to be re-run if any dependency changes.
+    params:
+      - models.baseline.random_forest.n_estimators
+      - models.baseline.random_forest.max_depth
+      - models.neural_network.epochs
+      - models.neural_network.batch_size
+    
+  promote_model:
+    cmd: conda run -n tdsp-env python scripts/promotion/main.py
+    deps:
+      - scripts/promotion/main.py
+      - mlruns # The promotion depends on the results of the training runs
+    outs:
+      - models/promoted_model.pkl
+    metrics:
+      - reports/metrics.json:
+          cache: false 

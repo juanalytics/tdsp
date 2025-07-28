@@ -12,6 +12,8 @@ import numpy as np
 import logging
 import json
 from pathlib import Path
+import mlflow
+import mlflow.sklearn
 
 # Añadir el directorio src al path para importar módulos
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../src'))
@@ -49,106 +51,111 @@ def load_evaluation_data():
     
     return features_df, target
 
-def load_trained_models():
+def get_latest_runs():
     """
-    Carga los modelos entrenados.
+    Obtiene los últimos runs de MLflow para cada modelo.
     
     Returns:
-        Diccionario con modelos cargados
+        Diccionario con la información de los últimos runs.
     """
-    logger.info("🤖 Cargando modelos entrenados...")
+    logger.info("🤖 Obteniendo últimos runs de MLflow...")
+    runs_info = {}
     
-    models_dir = Path(__file__).parent.parent.parent / "models"
-    models = {}
-    
-    # Cargar modelos baseline
-    baseline_models = {
-        'logistic_regression': 'logistic',
-        'random_forest': 'random_forest'
-    }
-    
-    for model_name, model_type in baseline_models.items():
-        model_path = models_dir / f"{model_name}_model.pkl"
-        if model_path.exists():
-            model = BaselineModel(model_type=model_type)
-            model.load_model(str(model_path))
-            models[model_name] = model
-            logger.info(f"✅ Cargado {model_name}")
-        else:
-            logger.warning(f"⚠️ No se encontró {model_name}")
-    
-    # Cargar modelo de red neuronal
-    nn_path = models_dir / "neural_network_model.pkl"
-    if nn_path.exists():
-        # Input dim es irrelevante al cargar, se sobreescribirá
-        nn_model = NeuralNetworkModel(input_dim=1)
-        nn_model.load_model(str(nn_path))
-        models['neural_network'] = nn_model
-        logger.info("✅ Cargado neural_network")
-    else:
-        logger.warning("⚠️ No se encontró neural_network_model.pkl")
-    
-    return models
+    # Baseline Models
+    try:
+        exp_baseline = mlflow.get_experiment_by_name("Baseline Models")
+        if exp_baseline:
+            df_baseline = mlflow.search_runs(experiment_ids=[exp_baseline.experiment_id], order_by=["start_time DESC"])
+            for model_name in ['logistic_regression', 'random_forest']:
+                run = df_baseline[df_baseline['tags.mlflow.runName'] == model_name].iloc[0]
+                runs_info[model_name] = {'run_id': run.run_id, 'artifact_uri': run.artifact_uri}
+                logger.info(f"✅ Encontrado último run para {model_name}: {run.run_id}")
+    except Exception as e:
+        logger.warning(f"⚠️ No se encontraron runs para Baseline Models: {e}")
+        
+    # Neural Network
+    try:
+        exp_nn = mlflow.get_experiment_by_name("Neural Network")
+        if exp_nn:
+            df_nn = mlflow.search_runs(experiment_ids=[exp_nn.experiment_id], order_by=["start_time DESC"])
+            run_nn = df_nn.iloc[0]
+            runs_info['neural_network'] = {'run_id': run_nn.run_id, 'artifact_uri': run_nn.artifact_uri}
+            logger.info(f"✅ Encontrado último run para neural_network: {run_nn.run_id}")
+    except Exception as e:
+        logger.warning(f"⚠️ No se encontraron runs para Neural Network: {e}")
+        
+    return runs_info
 
-def generate_comprehensive_evaluation(features_df, target, models):
+def generate_comprehensive_evaluation(features_df, target, runs_info):
     """
-    Genera evaluación completa de todos los modelos.
+    Genera evaluación completa de todos los modelos a partir de runs de MLflow.
     
     Args:
         features_df: DataFrame con características
         target: Series con variable objetivo
-        models: Diccionario con modelos cargados
+        runs_info: Diccionario con información de los runs de MLflow
         
     Returns:
         Diccionario con resultados de evaluación
     """
-    logger.info("📊 Generando evaluación completa...")
+    logger.info("📊 Generando evaluación completa desde MLflow...")
     
     evaluator = ModelEvaluator()
     evaluation_results = {}
     
     # Evaluar cada modelo
-    for model_name, model in models.items():
-        logger.info(f"📋 Evaluando {model_name}...")
+    for model_name, run_info in runs_info.items():
+        logger.info(f"📋 Evaluando {model_name} (Run ID: {run_info['run_id']})...")
         
-        # Hacer predicciones
-        y_pred = model.predict(features_df)
-        y_pred_proba = model.predict_proba(features_df)
-        
-        # Ajustar formato de probabilidades si es necesario
-        if len(y_pred_proba.shape) > 1 and y_pred_proba.shape[1] > 1:
-             y_pred_proba = y_pred_proba[:, 1]
-        else:
-             y_pred_proba = y_pred_proba.flatten()
-        
-        # Obtener importancia de características si está disponible
-        feature_importance = None
-        if hasattr(model, 'get_feature_importance'):
+        try:
+            # Cargar modelo
+            if model_name in ['logistic_regression', 'random_forest']:
+                model_uri = f"runs:/{run_info['run_id']}/{model_name}"
+                model = mlflow.sklearn.load_model(model_uri)
+                y_pred = model.predict(features_df)
+                y_pred_proba = model.predict_proba(features_df)[:, 1]
+            elif model_name == 'neural_network':
+                client = mlflow.tracking.MlflowClient()
+                local_path = client.download_artifacts(run_info['run_id'], "model")
+                model = NeuralNetworkModel(input_dim=len(features_df.columns))
+                model.load_model(os.path.join(local_path, "neural_network_model.pkl"))
+                y_pred = model.predict(features_df)
+                y_pred_proba = model.predict_proba(features_df).flatten()
+            else:
+                continue
+
+            # Obtener importancia de características si existe como artefacto
+            feature_importance = None
             try:
-                feature_importance = model.get_feature_importance(features_df)
-            except:
-                pass
+                client = mlflow.tracking.MlflowClient()
+                local_path = client.download_artifacts(run_info['run_id'], "feature_importance")
+                feature_importance = pd.read_csv(os.path.join(local_path, f"{model_name}_feature_importance.csv"))
+            except Exception:
+                logger.info(f"No se encontró artefacto de importancia de características para {model_name}.")
+
+            # Generar reporte de evaluación
+            plots_dir = Path(__file__).parent.parent.parent / "docs" / "modeling" / "plots"
+            plots_dir.mkdir(parents=True, exist_ok=True)
+            
+            evaluation_report = evaluator.generate_evaluation_report(
+                y_true=target.values,
+                y_pred=y_pred,
+                y_pred_proba=y_pred_proba,
+                model_name=model_name,
+                feature_importance=feature_importance,
+                save_dir=str(plots_dir)
+            )
+            
+            evaluation_results[model_name] = evaluation_report
+            
+            # Mostrar métricas principales
+            metrics = evaluation_report['metrics']
+            logger.info(f"   F1-Score: {metrics['f1_score']:.3f}")
+            logger.info(f"   ROC-AUC: {metrics['roc_auc']:.3f}")
+            logger.info(f"   Accuracy: {metrics['accuracy']:.3f}")
         
-        # Generar reporte de evaluación
-        plots_dir = Path(__file__).parent.parent.parent / "docs" / "modeling" / "plots"
-        plots_dir.mkdir(parents=True, exist_ok=True)
-        
-        evaluation_report = evaluator.generate_evaluation_report(
-            y_true=target.values,
-            y_pred=y_pred,
-            y_pred_proba=y_pred_proba,
-            model_name=model_name,
-            feature_importance=feature_importance,
-            save_dir=str(plots_dir)
-        )
-        
-        evaluation_results[model_name] = evaluation_report
-        
-        # Mostrar métricas principales
-        metrics = evaluation_report['metrics']
-        logger.info(f"   F1-Score: {metrics['f1_score']:.3f}")
-        logger.info(f"   ROC-AUC: {metrics['roc_auc']:.3f}")
-        logger.info(f"   Accuracy: {metrics['accuracy']:.3f}")
+        except Exception as e:
+            logger.error(f"❌ Error evaluando {model_name}: {e}")
     
     return evaluation_results
 
@@ -270,21 +277,24 @@ def main():
     """
     Función principal del script de evaluación.
     """
-    logger.info("🚀 Iniciando evaluación de modelos...")
+    logger.info("🚀 Iniciando evaluación de modelos desde MLflow...")
     
     try:
         # Cargar datos
         features_df, target = load_evaluation_data()
         
-        # Cargar modelos entrenados
-        models = load_trained_models()
+        # Obtener los últimos runs de MLflow
+        runs_info = get_latest_runs()
         
-        if not models:
-            raise ValueError("No se encontraron modelos entrenados para evaluar")
+        if not runs_info:
+            raise ValueError("No se encontraron runs de entrenamiento en MLflow para evaluar.")
         
         # Generar evaluación completa
-        evaluation_results = generate_comprehensive_evaluation(features_df, target, models)
+        evaluation_results = generate_comprehensive_evaluation(features_df, target, runs_info)
         
+        if not evaluation_results:
+            raise ValueError("No se pudo generar ninguna evaluación a partir de los runs de MLflow.")
+
         # Crear comparación final
         comparison_df = create_final_comparison_report(evaluation_results)
         
