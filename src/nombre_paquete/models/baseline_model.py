@@ -102,20 +102,19 @@ class BaselineModel:
         self.pipeline.fit(X_train, y_train)
         self.is_fitted = True
         
-        # Evaluar modelo
+        # Evaluar en conjunto de prueba
         y_pred = self.pipeline.predict(X_test)
-        y_pred_proba = self.pipeline.predict_proba(X_test)[:, 1]
         
-        # Calcular métricas
         metrics = {
             'accuracy': self.pipeline.score(X_test, y_test),
             'f1_score': f1_score(y_test, y_pred),
-            'roc_auc': roc_auc_score(y_test, y_pred_proba),
+            'roc_auc': roc_auc_score(y_test, self.pipeline.predict_proba(X_test)[:, 1]),
             'classification_report': classification_report(y_test, y_pred, zero_division=0),
             'confusion_matrix': confusion_matrix(y_test, y_pred)
         }
         
         logger.info(f"✅ Modelo entrenado - F1: {metrics['f1_score']:.3f}, ROC-AUC: {metrics['roc_auc']:.3f}")
+        
         return metrics
     
     def cross_validate(self, X: pd.DataFrame, y: pd.Series, cv: int = 5) -> Dict[str, float]:

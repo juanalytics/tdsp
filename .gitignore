@@ -14,8 +14,30 @@ credentials*
 # Ignore build artifacts
 **/build/
 
-# Ignore data and model artifacts
-data/
+# Project-specific ignores
+# data/ # Replaced with specific rules for DVC
+reports/
+models/
+notebooks/executed/
+.DS_Store
+
+# DVC/MLflow specific ignores
+# Ignore the DVC cache and local remote storage
+dvc_storage/
+
+# Ignore MLflow experiment tracking data
+mlruns/
+
+# Ignore the contents of data directories, but not the directories themselves
+# This allows Git to track the .dvc files created by DVC
+data/anonymisedData/*
+!data/anonymisedData/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+
+# Ignore large data and model artifact files
 *.csv
 *.zip
 *.db

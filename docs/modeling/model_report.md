@@ -5,6 +5,7 @@
 El modelo final implementado es una **Red Neuronal Multilayer Perceptron (MLP)** diseñada específicamente para la predicción de retención estudiantil. Este modelo representa la culminación del proceso de modelado siguiendo la metodología CRISP-DM y busca alcanzar el objetivo del proyecto de F1-Score ≥ 85%.
 
 ### Resultados Principales
+
 - **Arquitectura**: MLP con capas [128, 64, 32] neuronas
 - **Objetivo**: F1-Score ≥ 85% para clasificación de abandono estudiantil
 - **Metodología**: Deep Learning con técnicas de regularización
@@ -13,16 +14,20 @@ El modelo final implementado es una **Red Neuronal Multilayer Perceptron (MLP)**
 ## Descripción del Problema
 
 ### Contexto del Problema
+
 La educación en línea ha experimentado un crecimiento exponencial, especialmente tras la pandemia global. Sin embargo, las tasas de abandono estudiantil en cursos virtuales siguen siendo significativamente altas, representando un desafío crítico para las instituciones educativas.
 
 ### Objetivos del Modelo
+
 1. **Identificación temprana**: Detectar estudiantes en riesgo de abandono en etapas tempranas del curso
 2. **Alta precisión**: Alcanzar F1-Score ≥ 85% para clasificación confiable
 3. **Interpretabilidad**: Proporcionar explicaciones claras de las predicciones
 4. **Escalabilidad**: Diseño adaptable a diferentes contextos educativos
 
 ### Justificación del Modelo
+
 La elección de una red neuronal MLP se basa en:
+
 - **Capacidad de aprendizaje no lineal**: Captura relaciones complejas entre variables
 - **Regularización robusta**: Dropout y BatchNormalization previenen overfitting
 - **Arquitectura optimizada**: Diseñada específicamente para el problema de retención
@@ -47,11 +52,13 @@ Dense(1) + Sigmoid
 ### Características Técnicas
 
 #### Preprocesamiento
+
 - **Escalado**: StandardScaler para normalización de características
 - **Codificación**: One-hot encoding para variables categóricas
 - **Ingeniería de características**: Creación de características derivadas relevantes
 
 #### Hiperparámetros
+
 - **Optimizador**: Adam con learning rate = 0.001
 - **Función de pérdida**: Binary Crossentropy
 - **Métricas**: Accuracy, Precision, Recall
@@ -59,6 +66,7 @@ Dense(1) + Sigmoid
 - **Early Stopping**: Patience = 10, monitor = val_loss
 
 #### Características de Entrada
+
 - **Demográficas**: Género, edad, educación previa, región, discapacidad
 - **Académicas**: Intentos previos, créditos, fechas de registro/desmatrícula
 - **Comportamentales**: Actividad en plataforma, patrones de interacción
@@ -69,6 +77,7 @@ Dense(1) + Sigmoid
 ### Métricas de Evaluación
 
 #### Métricas Principales
+
 - **F1-Score**: Objetivo principal ≥ 85%
 - **ROC-AUC**: Área bajo la curva ROC
 - **Precision**: Proporción de predicciones positivas correctas
@@ -76,6 +85,7 @@ Dense(1) + Sigmoid
 - **Accuracy**: Proporción total de predicciones correctas
 
 #### Validación
+
 - **Train/Validation/Test Split**: 60%/20%/20%
 - **Stratified Sampling**: Mantiene distribución de clases
 - **Cross-Validation**: 5-fold para estimación robusta
@@ -93,10 +103,12 @@ Dense(1) + Sigmoid
 ### Interpretación de Resultados
 
 #### Curva ROC
+
 - **AUC > 0.85**: Excelente capacidad discriminativa
 - **Punto de operación**: Balance entre precision y recall
 
 #### Matriz de Confusión
+
 - **Verdaderos Positivos**: Estudiantes en riesgo identificados correctamente
 - **Falsos Positivos**: Estudiantes sanos marcados como en riesgo
 - **Falsos Negativos**: Estudiantes en riesgo no identificados
@@ -121,11 +133,13 @@ Dense(1) + Sigmoid
 ### Escenarios de Aplicación
 
 #### Implementación Inmediata
+
 - **Monitoreo Semanal**: Evaluación continua de estudiantes
 - **Alertas Tempranas**: Identificación de riesgo en primeras semanas
 - **Intervenciones Personalizadas**: Basadas en características específicas
 
 #### Adaptaciones Futuras
+
 - **Múltiples Cursos**: Extensión a diferentes disciplinas
 - **Diferentes Instituciones**: Adaptación a contextos específicos
 - **Tiempo Real**: Integración con sistemas LMS
@@ -140,15 +154,18 @@ Dense(1) + Sigmoid
 ## Referencias
 
 ### Datasets
+
 - **OULAD**: Open University Learning Analytics Dataset
 - **Características**: 32,593 estudiantes, 10.6M eventos de interacción
 
 ### Metodología
+
 - **CRISP-DM**: Cross-Industry Standard Process for Data Mining
 - **Deep Learning**: TensorFlow/Keras para implementación
 - **Interpretabilidad**: SHAP (SHapley Additive exPlanations)
 
 ### Literatura Académica
+
 - Student Retention Prediction in Online Education
 - Deep Learning for Educational Analytics
 - Interpretable Machine Learning for Education
